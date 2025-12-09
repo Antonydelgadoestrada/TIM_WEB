@@ -16,6 +16,8 @@ export default function Productos() {
   const [busquedaCategoria, setBusquedaCategoria] = useState('');
   const [showNuevaCategoria, setShowNuevaCategoria] = useState(false);
   const [nuevaCategoria, setNuevaCategoria] = useState('');
+  const [showNuevoProveedor, setShowNuevoProveedor] = useState(false);
+  const [nuevoProveedor, setNuevoProveedor] = useState('');
   const [formData, setFormData] = useState({
     codigo: '',
     nombre: '',
@@ -29,6 +31,21 @@ export default function Productos() {
   });
 
   const esAdmin = usuario?.rol === 'ADMIN';
+
+  // Función para normalizar texto (sin tildes, minúsculas, sin plural)
+  const normalizarTexto = (texto) => {
+    return texto
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Eliminar tildes
+      .replace(/s$/i, '') // Eliminar 's' final (plural)
+      .trim();
+  };
+
+  // Función para capitalizar (Primera letra mayúscula)
+  const capitalizarTexto = (texto) => {
+    return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+  };
 
   useEffect(() => {
     cargarDatos();
@@ -94,6 +111,7 @@ export default function Productos() {
     }
     setBusquedaCategoria('');
     setShowNuevaCategoria(false);
+    setShowNuevoProveedor(false);
     setShowModal(true);
   };
 
@@ -103,6 +121,8 @@ export default function Productos() {
     setBusquedaCategoria('');
     setShowNuevaCategoria(false);
     setNuevaCategoria('');
+    setShowNuevoProveedor(false);
+    setNuevoProveedor('');
   };
 
   const crearCategoria = async () => {
@@ -111,13 +131,17 @@ export default function Productos() {
       return;
     }
 
-    // Verificar si ya existe
+    // Normalizar y capitalizar el nombre
+    const nombreCapitalizado = capitalizarTexto(nuevaCategoria.trim());
+    const nombreNormalizado = normalizarTexto(nuevaCategoria);
+
+    // Verificar si ya existe (comparando versiones normalizadas)
     const existe = categorias.find(
-      cat => cat.nombre.toLowerCase() === nuevaCategoria.trim().toLowerCase()
+      cat => normalizarTexto(cat.nombre) === nombreNormalizado
     );
     
     if (existe) {
-      toast.error('Esta categoría ya existe');
+      toast.error(`Esta categoría ya existe como "${existe.nombre}"`);
       setFormData({ ...formData, categoriaId: existe.id });
       setBusquedaCategoria(existe.nombre);
       setShowNuevaCategoria(false);
@@ -127,7 +151,7 @@ export default function Productos() {
 
     try {
       const { data } = await apiClient.post('/categorias', {
-        nombre: nuevaCategoria.trim(),
+        nombre: nombreCapitalizado,
         descripcion: '',
       });
       
@@ -139,6 +163,48 @@ export default function Productos() {
       toast.success('Categoría creada correctamente');
     } catch (error) {
       toast.error('Error al crear categoría');
+    }
+  };
+
+  const crearProveedor = async () => {
+    if (!nuevoProveedor.trim()) {
+      toast.error('Ingresa el nombre del proveedor');
+      return;
+    }
+
+    // Normalizar y capitalizar el nombre
+    const nombreCapitalizado = capitalizarTexto(nuevoProveedor.trim());
+    const nombreNormalizado = normalizarTexto(nuevoProveedor);
+
+    // Verificar si ya existe
+    const existe = proveedores.find(
+      prov => normalizarTexto(prov.nombre) === nombreNormalizado
+    );
+    
+    if (existe) {
+      toast.error(`Este proveedor ya existe como "${existe.nombre}"`);
+      setFormData({ ...formData, proveedorId: existe.id });
+      setShowNuevoProveedor(false);
+      setNuevoProveedor('');
+      return;
+    }
+
+    try {
+      const { data } = await apiClient.post('/proveedores', {
+        nombre: nombreCapitalizado,
+        descripcion: '',
+        telefono: '',
+        email: '',
+        direccion: '',
+      });
+      
+      setProveedores([...proveedores, data]);
+      setFormData({ ...formData, proveedorId: data.id });
+      setShowNuevoProveedor(false);
+      setNuevoProveedor('');
+      toast.success('Proveedor creado. Puedes completar sus datos en Opciones');
+    } catch (error) {
+      toast.error('Error al crear proveedor');
     }
   };
 
@@ -337,64 +403,42 @@ export default function Productos() {
                   <label className="block text-sm font-medium mb-2">Categoría *</label>
                   
                   {!showNuevaCategoria ? (
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        placeholder="Buscar o seleccionar categoría..."
-                        value={busquedaCategoria}
-                        onChange={(e) => setBusquedaCategoria(e.target.value)}
-                        className="input-field"
-                      />
+                    <>
+                      <select
+                        value={formData.categoriaId}
+                        onChange={(e) => setFormData({ ...formData, categoriaId: e.target.value })}
+                        className="input-field mb-2"
+                      >
+                        <option value="">Seleccionar categoría...</option>
+                        {categorias.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.nombre}
+                          </option>
+                        ))}
+                      </select>
                       
-                      {formData.categoriaId && (
-                        <div className="text-sm text-green-600 font-medium px-2">
-                          ✓ Categoría seleccionada: {categorias.find(c => c.id === formData.categoriaId)?.nombre}
-                        </div>
-                      )}
-                      
-                      <div className="max-h-40 overflow-y-auto border rounded">
-                        {categorias
-                          .filter(cat => 
-                            cat.nombre.toLowerCase().includes(busquedaCategoria.toLowerCase())
-                          )
-                          .map((cat) => (
-                            <div
-                              key={cat.id}
-                              onClick={() => {
-                                setFormData({ ...formData, categoriaId: cat.id });
-                                setBusquedaCategoria(cat.nombre);
-                              }}
-                              className={`p-2 cursor-pointer hover:bg-gray-100 ${
-                                formData.categoriaId === cat.id ? 'bg-primary-50 text-primary-700 font-medium' : ''
-                              }`}
-                            >
-                              {cat.nombre}
-                            </div>
-                          ))
-                        }
-                        {categorias.filter(cat => 
-                          cat.nombre.toLowerCase().includes(busquedaCategoria.toLowerCase())
-                        ).length === 0 && (
-                          <div className="p-4 text-center text-gray-500 text-sm">
-                            No se encontraron categorías
-                          </div>
-                        )}
-                      </div>
-
                       <button
                         type="button"
-                        onClick={() => setShowNuevaCategoria(true)}
-                        className="w-full text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center justify-center gap-2 py-2 border border-dashed border-primary-300 rounded hover:border-primary-500"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Botón clickeado, estado actual:', showNuevaCategoria);
+                          setShowNuevaCategoria(true);
+                          console.log('Estado cambiado a true');
+                        }}
+                        className="btn-secondary w-full flex items-center justify-center gap-2"
+                        style={{ pointerEvents: 'auto', zIndex: 10 }}
                       >
                         <Plus className="w-4 h-4" />
                         Crear Nueva Categoría
                       </button>
-                    </div>
+                    </>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2 p-4 bg-gray-50 rounded">
+                      <p className="text-sm font-medium text-gray-700">Nueva Categoría</p>
                       <input
                         type="text"
-                        placeholder="Nombre de la nueva categoría"
+                        placeholder="Nombre de la categoría"
                         value={nuevaCategoria}
                         onChange={(e) => setNuevaCategoria(e.target.value)}
                         className="input-field"
@@ -412,7 +456,7 @@ export default function Productos() {
                           onClick={crearCategoria}
                           className="btn-primary flex-1"
                         >
-                          Guardar Categoría
+                          Guardar
                         </button>
                         <button
                           type="button"
@@ -420,7 +464,7 @@ export default function Productos() {
                             setShowNuevaCategoria(false);
                             setNuevaCategoria('');
                           }}
-                          className="btn-secondary"
+                          className="btn-secondary flex-1"
                         >
                           Cancelar
                         </button>
@@ -441,18 +485,76 @@ export default function Productos() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2">Proveedor</label>
-                  <select
-                    value={formData.proveedorId}
-                    onChange={(e) => setFormData({ ...formData, proveedorId: e.target.value })}
-                    className="input-field"
-                  >
-                    <option value="">Ninguno</option>
-                    {proveedores.map((prov) => (
-                      <option key={prov.id} value={prov.id}>
-                        {prov.nombre}
-                      </option>
-                    ))}
-                  </select>
+                  
+                  {!showNuevoProveedor ? (
+                    <>
+                      <select
+                        value={formData.proveedorId}
+                        onChange={(e) => setFormData({ ...formData, proveedorId: e.target.value })}
+                        className="input-field mb-2"
+                      >
+                        <option value="">Ninguno</option>
+                        {proveedores.map((prov) => (
+                          <option key={prov.id} value={prov.id}>
+                            {prov.nombre}
+                          </option>
+                        ))}
+                      </select>
+                      
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowNuevoProveedor(true);
+                        }}
+                        className="btn-secondary w-full flex items-center justify-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Crear Nuevo Proveedor
+                      </button>
+                    </>
+                  ) : (
+                    <div className="space-y-2 p-4 bg-gray-50 rounded">
+                      <p className="text-sm font-medium text-gray-700">Nuevo Proveedor</p>
+                      <input
+                        type="text"
+                        placeholder="Nombre del proveedor"
+                        value={nuevoProveedor}
+                        onChange={(e) => setNuevoProveedor(e.target.value)}
+                        className="input-field"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            crearProveedor();
+                          }
+                        }}
+                      />
+                      <p className="text-xs text-gray-500">
+                        Podrás agregar teléfono, email y dirección desde Opciones
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={crearProveedor}
+                          className="btn-primary flex-1"
+                        >
+                          Guardar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowNuevoProveedor(false);
+                            setNuevoProveedor('');
+                          }}
+                          className="btn-secondary flex-1"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

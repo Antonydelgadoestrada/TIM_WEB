@@ -21,7 +21,26 @@ export default function Opciones() {
 
   const esAdmin = usuario?.rol === 'ADMIN';
 
+  // Función para normalizar texto (sin tildes, minúsculas, sin plural)
+  const normalizarTexto = (texto) => {
+    return texto
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Eliminar tildes
+      .replace(/s$/i, '') // Eliminar 's' final (plural)
+      .trim();
+  };
+
+  // Función para capitalizar (Primera letra mayúscula)
+  const capitalizarTexto = (texto) => {
+    return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+  };
+
   useEffect(() => {
+    // Cerrar modal cuando cambia la vista
+    setShowModal(false);
+    setEditando(null);
+    
     if (vista === 'categorias') {
       cargarCategorias();
     } else if (vista === 'proveedores') {
@@ -87,8 +106,22 @@ export default function Opciones() {
     
     try {
       if (vista === 'categorias') {
+        // Normalizar y capitalizar el nombre
+        const nombreCapitalizado = capitalizarTexto(formData.nombre.trim());
+        const nombreNormalizado = normalizarTexto(formData.nombre);
+
+        // Verificar duplicados (ignorando el item actual si está editando)
+        const duplicado = categorias.find(
+          cat => cat.id !== editando?.id && normalizarTexto(cat.nombre) === nombreNormalizado
+        );
+        
+        if (duplicado) {
+          toast.error(`Esta categoría ya existe como "${duplicado.nombre}"`);
+          return;
+        }
+
         const data = {
-          nombre: formData.nombre,
+          nombre: nombreCapitalizado,
           descripcion: formData.descripcion,
         };
 
@@ -101,8 +134,22 @@ export default function Opciones() {
         }
         cargarCategorias();
       } else {
+        // Capitalizar nombre del proveedor también
+        const nombreCapitalizado = capitalizarTexto(formData.nombre.trim());
+        const nombreNormalizado = normalizarTexto(formData.nombre);
+
+        // Verificar duplicados
+        const duplicado = proveedores.find(
+          prov => prov.id !== editando?.id && normalizarTexto(prov.nombre) === nombreNormalizado
+        );
+        
+        if (duplicado) {
+          toast.error(`Este proveedor ya existe como "${duplicado.nombre}"`);
+          return;
+        }
+
         const data = {
-          nombre: formData.nombre,
+          nombre: nombreCapitalizado,
           descripcion: formData.descripcion,
           telefono: formData.telefono,
           email: formData.email,
