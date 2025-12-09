@@ -9,7 +9,8 @@ export default function Opciones() {
   const [vista, setVista] = useState('menu'); // menu, categorias, proveedores
   const [categorias, setCategorias] = useState([]);
   const [proveedores, setProveedores] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+  const [showModalCategoria, setShowModalCategoria] = useState(false);
+  const [showModalProveedor, setShowModalProveedor] = useState(false);
   const [editando, setEditando] = useState(null);
   const [formData, setFormData] = useState({
     nombre: '',
@@ -37,8 +38,9 @@ export default function Opciones() {
   };
 
   useEffect(() => {
-    // Cerrar modal cuando cambia la vista
-    setShowModal(false);
+    // Cerrar modales cuando cambia la vista
+    setShowModalCategoria(false);
+    setShowModalProveedor(false);
     setEditando(null);
     
     if (vista === 'categorias') {
@@ -93,11 +95,17 @@ export default function Opciones() {
         direccion: '',
       });
     }
-    setShowModal(true);
+    
+    if (tipo === 'categoria') {
+      setShowModalCategoria(true);
+    } else {
+      setShowModalProveedor(true);
+    }
   };
 
   const cerrarModal = () => {
-    setShowModal(false);
+    setShowModalCategoria(false);
+    setShowModalProveedor(false);
     setEditando(null);
   };
 
@@ -226,7 +234,10 @@ export default function Opciones() {
           <h1 className="text-3xl font-bold">Categorías</h1>
           <div className="flex gap-3">
             {esAdmin && (
-              <button onClick={() => abrirModal('categoria')} className="btn-primary flex items-center gap-2">
+              <button 
+                onClick={() => abrirModal('categoria')} 
+                className="btn-primary flex items-center gap-2"
+              >
                 <Plus className="w-5 h-5" />
                 Nueva Categoría
               </button>
@@ -271,6 +282,57 @@ export default function Opciones() {
             </div>
           ))}
         </div>
+
+        {/* Modal Categorías */}
+        {showModalCategoria && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-md w-full">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold">
+                    {editando ? 'Editar' : 'Nueva'} Categoría
+                  </h2>
+                  <button onClick={cerrarModal} className="text-gray-500 hover:text-gray-700">
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Nombre *</label>
+                    <input
+                      type="text"
+                      value={formData.nombre}
+                      onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                      className="input-field"
+                      required
+                      autoFocus
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Descripción</label>
+                    <textarea
+                      value={formData.descripcion}
+                      onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                      className="input-field"
+                      rows="3"
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button type="submit" className="btn-primary flex-1">
+                      {editando ? 'Actualizar' : 'Crear'}
+                    </button>
+                    <button type="button" onClick={cerrarModal} className="btn-secondary flex-1">
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -337,14 +399,14 @@ export default function Opciones() {
         </div>
       </div>
 
-      {/* Modal */}
-      {showModal && (
+      {/* Modal Proveedores */}
+      {showModalProveedor && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold">
-                  {editando ? 'Editar' : 'Nuevo'} {vista === 'categorias' ? 'Categoría' : 'Proveedor'}
+                  {editando ? 'Editar' : 'Nuevo'} Proveedor
                 </h2>
                 <button onClick={cerrarModal} className="text-gray-500 hover:text-gray-700">
                   <X className="w-6 h-6" />
