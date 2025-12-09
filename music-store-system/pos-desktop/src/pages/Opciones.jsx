@@ -248,44 +248,57 @@ export default function Opciones() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categorias.map((cat) => (
-            <div key={cat.id} className="card hover:shadow-lg transition-shadow">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Tag className="w-5 h-5 text-primary-600" />
-                    <h3 className="font-bold text-lg">{cat.nombre}</h3>
-                  </div>
-                  {cat.descripcion && (
-                    <p className="text-sm text-gray-600">{cat.descripcion}</p>
-                  )}
-                </div>
-                
-                {esAdmin && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => abrirModal('categoria', cat)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => eliminar(cat.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+        <div className="card">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-3">Nombre</th>
+                  <th className="text-left p-3">Descripción</th>
+                  {esAdmin && <th className="text-center p-3">Acciones</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {categorias.map((cat) => (
+                  <tr key={cat.id} className="border-b hover:bg-gray-50">
+                    <td className="p-3 font-medium">{cat.nombre}</td>
+                    <td className="p-3">{cat.descripcion || '-'}</td>
+                    {esAdmin && (
+                      <td className="p-3">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            onClick={() => abrirModal('categoria', cat)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => eliminar(cat.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Modal Categorías */}
         {showModalCategoria && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) cerrarModal();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') cerrarModal();
+            }}
+          >
             <div className="bg-white rounded-lg max-w-md w-full">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
@@ -297,7 +310,16 @@ export default function Opciones() {
                   </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form 
+                  onSubmit={handleSubmit} 
+                  className="space-y-4"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                      e.preventDefault();
+                      handleSubmit(e);
+                    }
+                  }}
+                >
                   <div>
                     <label className="block text-sm font-medium mb-2">Nombre *</label>
                     <input
@@ -401,7 +423,15 @@ export default function Opciones() {
 
       {/* Modal Proveedores */}
       {showModalProveedor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) cerrarModal();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') cerrarModal();
+          }}
+        >
           <div className="bg-white rounded-lg max-w-md w-full">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
@@ -413,7 +443,16 @@ export default function Opciones() {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form 
+                onSubmit={handleSubmit} 
+                className="space-y-4"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
+              >
                 <div>
                   <label className="block text-sm font-medium mb-2">Nombre *</label>
                   <input
