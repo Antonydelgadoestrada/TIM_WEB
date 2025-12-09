@@ -7,20 +7,33 @@ import {
   CreditCard, 
   BarChart3, 
   Music,
-  Settings
+  Settings,
+  Users,
+  ClipboardList
 } from 'lucide-react';
-
-const menuItems = [
-  { icon: Home, label: 'Dashboard', path: '/' },
-  { icon: ShoppingCart, label: 'Ventas', path: '/ventas' },
-  { icon: Package, label: 'Productos', path: '/productos' },
-  { icon: Warehouse, label: 'Inventario', path: '/inventario' },
-  { icon: CreditCard, label: 'Cajas', path: '/cajas' },
-  { icon: BarChart3, label: 'Reportes', path: '/reportes' },
-  { icon: Settings, label: 'Opciones', path: '/opciones' },
-];
+import { useAuthStore } from '../store/authStore';
 
 export default function Sidebar() {
+  const { usuario } = useAuthStore();
+  const esAdmin = usuario?.rol === 'ADMIN';
+
+  const menuItems = [
+    { icon: Home, label: 'Dashboard', path: '/' },
+    { icon: ShoppingCart, label: 'Ventas', path: '/ventas' },
+    { icon: Package, label: 'Productos', path: '/productos' },
+    { icon: Warehouse, label: 'Inventario', path: '/inventario' },
+    { icon: CreditCard, label: 'Cajas', path: '/cajas' },
+    { icon: BarChart3, label: 'Reportes', path: '/reportes' },
+    { icon: Settings, label: 'Opciones', path: '/opciones' },
+  ];
+
+  if (esAdmin) {
+    menuItems.push(
+      { icon: ClipboardList, label: 'Historial Ventas', path: '/historial-ventas' },
+      { icon: Users, label: 'Usuarios', path: '/usuarios' }
+    );
+  }
+
   return (
     <div className="w-64 bg-primary-900 text-white flex flex-col">
       <div className="p-6 flex items-center gap-3 border-b border-primary-800">

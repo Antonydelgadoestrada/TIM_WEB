@@ -8,6 +8,8 @@ import Inventario from './pages/Inventario';
 import Cajas from './pages/Cajas';
 import Reportes from './pages/Reportes';
 import Opciones from './pages/Opciones';
+import Usuarios from './pages/Usuarios';
+import HistorialVentas from './pages/HistorialVentas';
 import Layout from './components/Layout';
 
 function App() {
@@ -25,6 +27,8 @@ function App() {
         <Route path="/cajas" element={<Cajas />} />
         <Route path="/reportes" element={<Reportes />} />
         <Route path="/opciones" element={<Opciones />} />
+        <Route path="/usuarios" element={<Usuarios />} />
+        <Route path="/historial-ventas" element={<HistorialVentas />} />
       </Route>
     </Routes>
   );
