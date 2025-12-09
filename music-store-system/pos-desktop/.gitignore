@@ -1,0 +1,7 @@
+postcss.config.js
+node_modules/
+dist/
+dist-electron/
+.env
+.env.local
+*.log

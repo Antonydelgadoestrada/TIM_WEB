@@ -1,0 +1,180 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Usuarios del sistema
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  email     String   @unique
+  password  String
+  rol       Rol      @default(CAJERO)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ventas Venta[]
+  cajas  Caja[]
+  movimientos MovimientoInventario[]
+
+  @@map("usuarios")
+}
+
+enum Rol {
+  ADMIN
+  CAJERO
+  ALMACEN
+}
+
+// Categorías de productos
+model Categoria {
+  id          Int        @id @default(autoincrement())
+  nombre      String     @unique
+  descripcion String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  productos Producto[]
+
+  @@map("categorias")
+}
+
+// Proveedores
+model Proveedor {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  contacto  String?
+  telefono  String?
+  email     String?
+  direccion String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  productos Producto[]
+
+  @@map("proveedores")
+}
+
+// Productos
+model Producto {
+  id            Int      @id @default(autoincrement())
+  codigo        String   @unique
+  nombre        String
+  descripcion   String?
+  categoriaId   Int
+  proveedorId   Int?
+  precioCompra  Decimal  @db.Decimal(10, 2)
+  precioVenta   Decimal  @db.Decimal(10, 2)
+  stock         Int      @default(0)
+  stockMinimo   Int      @default(5)
+  imagen        String?
+  activo        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  categoria  Categoria @relation(fields: [categoriaId], references: [id])
+  proveedor  Proveedor? @relation(fields: [proveedorId], references: [id])
+  
+  detalleVentas DetalleVenta[]
+  movimientos   MovimientoInventario[]
+
+  @@map("productos")
+}
+
+// Cajas (turnos)
+model Caja {
+  id             Int       @id @default(autoincrement())
+  usuarioId      Int
+  montoInicial   Decimal   @db.Decimal(10, 2)
+  montoFinal     Decimal?  @db.Decimal(10, 2)
+  fechaApertura  DateTime  @default(now())
+  fechaCierre    DateTime?
+  estado         EstadoCaja @default(ABIERTA)
+  observaciones  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  ventas  Venta[]
+
+  @@map("cajas")
+}
+
+enum EstadoCaja {
+  ABIERTA
+  CERRADA
+}
+
+// Ventas
+model Venta {
+  id            Int          @id @default(autoincrement())
+  cajaId        Int
+  usuarioId     Int
+  total         Decimal      @db.Decimal(10, 2)
+  metodoPago    MetodoPago
+  fechaVenta    DateTime     @default(now())
+  observaciones String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  caja     Caja   @relation(fields: [cajaId], references: [id])
+  usuario  Usuario @relation(fields: [usuarioId], references: [id])
+  
+  detalles DetalleVenta[]
+
+  @@map("ventas")
+}
+
+enum MetodoPago {
+  EFECTIVO
+  TARJETA
+  TRANSFERENCIA
+  MIXTO
+}
+
+// Detalle de ventas
+model DetalleVenta {
+  id             Int     @id @default(autoincrement())
+  ventaId        Int
+  productoId     Int
+  cantidad       Int
+  precioUnitario Decimal @db.Decimal(10, 2)
+  subtotal       Decimal @db.Decimal(10, 2)
+
+  venta    Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  producto Producto @relation(fields: [productoId], references: [id])
+
+  @@map("detalle_ventas")
+}
+
+// Movimientos de inventario
+model MovimientoInventario {
+  id          Int             @id @default(autoincrement())
+  productoId  Int
+  usuarioId   Int
+  tipo        TipoMovimiento
+  cantidad    Int
+  motivo      String?
+  fecha       DateTime        @default(now())
+  createdAt   DateTime        @default(now())
+
+  producto Producto @relation(fields: [productoId], references: [id])
+  usuario  Usuario  @relation(fields: [usuarioId], references: [id])
+
+  @@map("movimientos_inventario")
+}
+
+enum TipoMovimiento {
+  ENTRADA
+  SALIDA
+  AJUSTE
+  VENTA
+}
