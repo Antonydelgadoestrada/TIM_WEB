@@ -20,7 +20,6 @@ export default function Sidebar() {
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/' },
     { icon: ShoppingCart, label: 'Ventas', path: '/ventas' },
-    { icon: Package, label: 'Productos', path: '/productos' },
     { icon: Warehouse, label: 'Inventario', path: '/inventario' },
     { icon: CreditCard, label: 'Cajas', path: '/cajas' },
     { icon: BarChart3, label: 'Reportes', path: '/reportes' },

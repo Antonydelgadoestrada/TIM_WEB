@@ -16,14 +16,15 @@ export default function Dashboard() {
   const cargarDatos = async () => {
     try {
       const [statsRes, cajaRes] = await Promise.all([
-        apiClient.get('/reportes/dashboard'),
-        apiClient.get('/cajas/activa'),
+        apiClient.get('/reportes/dashboard').catch(err => ({ data: null })),
+        apiClient.get('/cajas/activa').catch(err => ({ data: null })),
       ]);
       
       setStats(statsRes.data);
       setCajaActiva(cajaRes.data);
     } catch (error) {
-      toast.error('Error al cargar datos');
+      console.error('Error al cargar datos:', error);
+      // No mostrar toast aquí para evitar spam
     } finally {
       setLoading(false);
     }

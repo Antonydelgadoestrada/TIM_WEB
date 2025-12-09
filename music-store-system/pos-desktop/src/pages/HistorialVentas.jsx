@@ -45,11 +45,10 @@ export default function HistorialVentas() {
   const cargarVentas = async () => {
     try {
       const params = new URLSearchParams();
-      if (filtros.fechaInicio) params.append('fechaInicio', filtros.fechaInicio);
-      if (filtros.fechaFin) params.append('fechaFin', filtros.fechaFin);
+      if (filtros.fechaInicio) params.append('fechaDesde', filtros.fechaInicio);
+      if (filtros.fechaFin) params.append('fechaHasta', filtros.fechaFin);
       if (filtros.usuarioId) params.append('usuarioId', filtros.usuarioId);
       if (filtros.metodoPago) params.append('metodoPago', filtros.metodoPago);
-      if (filtros.busqueda) params.append('busqueda', filtros.busqueda);
 
       const { data } = await apiClient.get(`/ventas?${params}`);
       setVentas(data);
@@ -204,7 +203,7 @@ export default function HistorialVentas() {
             <div>
               <p className="text-sm text-green-600 font-medium">Total Ingresos</p>
               <p className="text-2xl font-bold text-green-900">
-                ${ventas.reduce((sum, v) => sum + v.total, 0).toFixed(2)}
+                ${ventas.reduce((sum, v) => sum + (parseFloat(v.total) || 0), 0).toFixed(2)}
               </p>
             </div>
             <DollarSign className="w-10 h-10 text-green-600" />
@@ -216,7 +215,7 @@ export default function HistorialVentas() {
             <div>
               <p className="text-sm text-purple-600 font-medium">Ticket Promedio</p>
               <p className="text-2xl font-bold text-purple-900">
-                ${ventas.length > 0 ? (ventas.reduce((sum, v) => sum + v.total, 0) / ventas.length).toFixed(2) : '0.00'}
+                ${ventas.length > 0 ? (ventas.reduce((sum, v) => sum + (parseFloat(v.total) || 0), 0) / ventas.length).toFixed(2) : '0.00'}
               </p>
             </div>
             <Calendar className="w-10 h-10 text-purple-600" />
@@ -251,10 +250,10 @@ export default function HistorialVentas() {
                     <td className="p-3">
                       <div className="text-sm">
                         <div className="font-medium">
-                          {new Date(venta.fecha).toLocaleDateString('es-ES')}
+                          {new Date(venta.fechaVenta).toLocaleDateString('es-ES')}
                         </div>
                         <div className="text-gray-500">
-                          {new Date(venta.fecha).toLocaleTimeString('es-ES', {
+                          {new Date(venta.fechaVenta).toLocaleTimeString('es-ES', {
                             hour: '2-digit',
                             minute: '2-digit',
                           })}
@@ -262,7 +261,7 @@ export default function HistorialVentas() {
                       </div>
                     </td>
                     <td className="p-3">
-                      <div className="font-medium">{venta.clienteNombre}</div>
+                      <div className="font-medium">{venta.clienteNombre || 'Cliente General'}</div>
                       {venta.clienteTelefono && (
                         <div className="text-sm text-gray-500">{venta.clienteTelefono}</div>
                       )}
@@ -286,7 +285,9 @@ export default function HistorialVentas() {
                         {venta.metodoPago}
                       </span>
                     </td>
-                    <td className="p-3 text-right font-bold">${venta.total.toFixed(2)}</td>
+                    <td className="p-3 text-right font-bold">
+                      ${parseFloat(venta.total || 0).toFixed(2)}
+                    </td>
                     <td className="p-3">
                       <div className="flex justify-center">
                         <button
@@ -334,7 +335,7 @@ export default function HistorialVentas() {
                 <div>
                   <p className="text-sm text-gray-600">Fecha</p>
                   <p className="font-medium">
-                    {new Date(ventaSeleccionada.fecha).toLocaleString('es-ES')}
+                    {new Date(ventaSeleccionada.fechaVenta).toLocaleString('es-ES')}
                   </p>
                 </div>
                 <div>
@@ -343,7 +344,7 @@ export default function HistorialVentas() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Cliente</p>
-                  <p className="font-medium">{ventaSeleccionada.clienteNombre}</p>
+                  <p className="font-medium">{ventaSeleccionada.clienteNombre || 'Cliente General'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Teléfono</p>
@@ -356,7 +357,7 @@ export default function HistorialVentas() {
                 <div>
                   <p className="text-sm text-gray-600">Total</p>
                   <p className="font-bold text-lg text-primary-600">
-                    ${ventaSeleccionada.total.toFixed(2)}
+                    ${parseFloat(ventaSeleccionada.total || 0).toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -375,13 +376,13 @@ export default function HistorialVentas() {
                       </tr>
                     </thead>
                     <tbody>
-                      {ventaSeleccionada.items?.map((item, index) => (
+                      {ventaSeleccionada.detalles?.map((item, index) => (
                         <tr key={index} className="border-b">
                           <td className="p-2">{item.producto?.nombre || 'N/A'}</td>
                           <td className="p-2 text-center">{item.cantidad}</td>
-                          <td className="p-2 text-right">${item.precioUnitario.toFixed(2)}</td>
+                          <td className="p-2 text-right">${parseFloat(item.precioUnitario || 0).toFixed(2)}</td>
                           <td className="p-2 text-right font-medium">
-                            ${item.subtotal.toFixed(2)}
+                            ${parseFloat(item.subtotal || 0).toFixed(2)}
                           </td>
                         </tr>
                       ))}
@@ -390,7 +391,7 @@ export default function HistorialVentas() {
                           TOTAL:
                         </td>
                         <td className="p-2 text-right text-lg text-primary-600">
-                          ${ventaSeleccionada.total.toFixed(2)}
+                          ${parseFloat(ventaSeleccionada.total || 0).toFixed(2)}
                         </td>
                       </tr>
                     </tbody>
