@@ -144,6 +144,12 @@ export default function Productos() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.categoriaId) {
+      toast.error('Debes seleccionar o crear una categoría');
+      return;
+    }
+
     try {
       const data = {
         ...formData,
@@ -316,92 +322,111 @@ export default function Productos() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Categoría *</label>
-                    
-                    {!showNuevaCategoria ? (
-                      <div className="space-y-2">
-                        <input
-                          type="text"
-                          placeholder="Buscar o seleccionar categoría..."
-                          value={busquedaCategoria}
-                          onChange={(e) => setBusquedaCategoria(e.target.value)}
-                          className="input-field"
-                        />
-                        
-                        <div className="max-h-40 overflow-y-auto border rounded">
-                          {categorias
-                            .filter(cat => 
-                              cat.nombre.toLowerCase().includes(busquedaCategoria.toLowerCase())
-                            )
-                            .map((cat) => (
-                              <div
-                                key={cat.id}
-                                onClick={() => {
-                                  setFormData({ ...formData, categoriaId: cat.id });
-                                  setBusquedaCategoria(cat.nombre);
-                                }}
-                                className={`p-2 cursor-pointer hover:bg-gray-100 ${
-                                  formData.categoriaId === cat.id ? 'bg-primary-50 text-primary-700 font-medium' : ''
-                                }`}
-                              >
-                                {cat.nombre}
-                              </div>
-                            ))
-                          }
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => setShowNuevaCategoria(true)}
-                          className="w-full text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center justify-center gap-2 py-2 border border-dashed border-primary-300 rounded hover:border-primary-500"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Crear Nueva Categoría
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <input
-                          type="text"
-                          placeholder="Nombre de la nueva categoría"
-                          value={nuevaCategoria}
-                          onChange={(e) => setNuevaCategoria(e.target.value)}
-                          className="input-field"
-                          autoFocus
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={crearCategoria}
-                            className="btn-primary flex-1"
-                          >
-                            Guardar Categoría
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowNuevaCategoria(false);
-                              setNuevaCategoria('');
-                            }}
-                            className="btn-secondary"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                    <label className="block text-sm font-medium mb-2">Nombre *</label>
+                    <input
+                      type="text"
+                      value={formData.nombre}
+                      onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                      className="input-field"
+                      required
+                    />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Nombre *</label>
-                  <input
-                    type="text"
-                    value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                    className="input-field"
-                    required
-                  />
+                  <label className="block text-sm font-medium mb-2">Categoría *</label>
+                  
+                  {!showNuevaCategoria ? (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Buscar o seleccionar categoría..."
+                        value={busquedaCategoria}
+                        onChange={(e) => setBusquedaCategoria(e.target.value)}
+                        className="input-field"
+                      />
+                      
+                      {formData.categoriaId && (
+                        <div className="text-sm text-green-600 font-medium px-2">
+                          ✓ Categoría seleccionada: {categorias.find(c => c.id === formData.categoriaId)?.nombre}
+                        </div>
+                      )}
+                      
+                      <div className="max-h-40 overflow-y-auto border rounded">
+                        {categorias
+                          .filter(cat => 
+                            cat.nombre.toLowerCase().includes(busquedaCategoria.toLowerCase())
+                          )
+                          .map((cat) => (
+                            <div
+                              key={cat.id}
+                              onClick={() => {
+                                setFormData({ ...formData, categoriaId: cat.id });
+                                setBusquedaCategoria(cat.nombre);
+                              }}
+                              className={`p-2 cursor-pointer hover:bg-gray-100 ${
+                                formData.categoriaId === cat.id ? 'bg-primary-50 text-primary-700 font-medium' : ''
+                              }`}
+                            >
+                              {cat.nombre}
+                            </div>
+                          ))
+                        }
+                        {categorias.filter(cat => 
+                          cat.nombre.toLowerCase().includes(busquedaCategoria.toLowerCase())
+                        ).length === 0 && (
+                          <div className="p-4 text-center text-gray-500 text-sm">
+                            No se encontraron categorías
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowNuevaCategoria(true)}
+                        className="w-full text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center justify-center gap-2 py-2 border border-dashed border-primary-300 rounded hover:border-primary-500"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Crear Nueva Categoría
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Nombre de la nueva categoría"
+                        value={nuevaCategoria}
+                        onChange={(e) => setNuevaCategoria(e.target.value)}
+                        className="input-field"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            crearCategoria();
+                          }
+                        }}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={crearCategoria}
+                          className="btn-primary flex-1"
+                        >
+                          Guardar Categoría
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowNuevaCategoria(false);
+                            setNuevaCategoria('');
+                          }}
+                          className="btn-secondary"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
